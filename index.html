@@ -198,11 +198,13 @@
             <span>載入表單中...</span>
         </div>
     </div>
-    <iframe class="sheet-iframe" id="sheetIframe" title="Google Sheets 旅行資料" frameborder="0"></iframe>
+    <iframe class="sheet-iframe" id="sheetIframe" title="旅行資料與工具" frameborder="0" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"></iframe>
 </div>
 
 <script>
-    // ----- 頁籤數據 (標題 & gid) 已移除所有「參考資料-」前綴 -----
+    // ----- 頁籤數據 -----
+    // 原有 Google Sheets 頁籤 (使用 gid)
+    // 新增兩個外部網址頁籤: 行程計劃、費用紀錄
     const tabsData = [
         { title: "行程表", gid: "1164452748" },
         { title: "住宿資訊", gid: "387601380" },
@@ -212,7 +214,10 @@
         { title: "上海住宿", gid: "1597957517" },
         { title: "瀋陽住宿", gid: "1910484059" },
         { title: "哈爾濱住宿", gid: "461233085" },
-        { title: "寧波中轉", gid: "329265611" }
+        { title: "寧波中轉", gid: "329265611" },
+        // 新增外部網頁頁籤 (完整URL)
+        { title: "行程計劃", externalUrl: "https://jumperhsu.github.io/TravelPlans/ViewPlan.html?versionId=92df65f1-16a4-42b9-9215-227c147e90de" },
+        { title: "費用紀錄", externalUrl: "https://jumperhsu.github.io/T-E/" }
     ];
 
     // Google Sheets 發布的基礎 URL (不包含 gid)
@@ -224,7 +229,7 @@
     const loadingOverlay = document.getElementById('loadingOverlay');
 
     let currentActiveTab = null;         // 當前激活的按鈕元素
-    let currentGid = null;               // 當前加載的 gid (避免重複加載)
+    let currentUrl = null;               // 當前加載的完整URL (用於避免重複加載)
     let iframeLoadHandler = null;         // 用來管理 load 事件
 
     // 顯示 loading (確保淡入效果)
@@ -262,16 +267,27 @@
         // 也監聽錯誤事件 (例如網路中斷或無法載入)
         iframe.addEventListener('error', function onError() {
             hideLoading();
-            // 可選: 在控制台提示，但不干擾界面
             console.warn('iframe 載入失敗，請檢查網路或連結有效性');
         });
     }
 
+    // 獲取頁籤對應的完整URL
+    function getTabUrl(tab) {
+        if (tab.externalUrl) {
+            return tab.externalUrl;
+        } else if (tab.gid) {
+            return BASE_URL + tab.gid;
+        }
+        return null;
+    }
+
     // 切換頁籤核心: 更新 iframe src 並管理高亮
-    function switchToTab(gid, tabButton) {
-        // 若點擊的已經是當前頁籤且 iframe 的 src 已包含相同 gid，則不做任何操作 (避免重複加載)
-        const newSrc = BASE_URL + gid;
-        if (currentGid === gid && iframe.src === newSrc) {
+    function switchToTab(tab, tabButton) {
+        const targetUrl = getTabUrl(tab);
+        if (!targetUrl) return;
+
+        // 若點擊的已經是當前頁籤且 iframe 的 src 相同，則不做任何操作 (避免重複加載)
+        if (currentUrl === targetUrl && iframe.src === targetUrl) {
             // 但仍然確保高亮是對的 (被點擊時)
             if (currentActiveTab !== tabButton) {
                 updateActiveTabStyle(tabButton);
@@ -285,9 +301,9 @@
         bindIframeLoadEvent();
 
         // 更新 src
-        iframe.src = newSrc;
-        // 記錄當前 gid
-        currentGid = gid;
+        iframe.src = targetUrl;
+        // 記錄當前 URL
+        currentUrl = targetUrl;
 
         // 更新頁籤樣式
         updateActiveTabStyle(tabButton);
@@ -312,7 +328,8 @@
             const button = document.createElement('button');
             button.className = 'tab-btn';
             button.textContent = tab.title;
-            button.setAttribute('data-gid', tab.gid);
+            // 儲存完整的 tab 物件資料 (使用 data-* 存索引，實際切換時透過索引取用)
+            button.setAttribute('data-tab-index', index);
             button.setAttribute('role', 'tab');
             button.setAttribute('aria-selected', 'false');
             button.setAttribute('id', `tab-${index}`);
@@ -320,9 +337,11 @@
             // 點擊事件
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                const gid = button.getAttribute('data-gid');
-                if (!gid) return;
-                switchToTab(gid, button);
+                const idx = parseInt(button.getAttribute('data-tab-index'), 10);
+                const targetTab = tabsData[idx];
+                if (targetTab) {
+                    switchToTab(targetTab, button);
+                }
             });
 
             tabsContainer.appendChild(button);
@@ -332,32 +351,34 @@
     // 初始化: 設定默認頁籤 (行程表，索引0)
     function initDefaultTab() {
         if (tabsData.length === 0) return;
-        const defaultTabButton = tabsContainer.querySelector('.tab-btn');
-        if (defaultTabButton) {
-            const defaultGid = defaultTabButton.getAttribute('data-gid');
-            // 強制加載第一個頁籤，並同步樣式
-            if (defaultGid) {
-                // 顯示加載動畫
+        const firstTab = tabsData[0];
+        const firstButton = tabsContainer.querySelector('.tab-btn');
+        if (firstButton && firstTab) {
+            const defaultUrl = getTabUrl(firstTab);
+            if (defaultUrl) {
                 showLoading();
                 bindIframeLoadEvent();
-                iframe.src = BASE_URL + defaultGid;
-                currentGid = defaultGid;
+                iframe.src = defaultUrl;
+                currentUrl = defaultUrl;
                 // 高亮第一個按鈕
-                defaultTabButton.classList.add('active');
-                defaultTabButton.setAttribute('aria-selected', 'true');
-                currentActiveTab = defaultTabButton;
+                firstButton.classList.add('active');
+                firstButton.setAttribute('aria-selected', 'true');
+                currentActiveTab = firstButton;
             }
         } else {
-            // 預防萬一: 直接調用
-            const fallbackGid = tabsData[0].gid;
-            showLoading();
-            bindIframeLoadEvent();
-            iframe.src = BASE_URL + fallbackGid;
-            currentGid = fallbackGid;
+            // 預防萬一: 直接加載第一個頁籤
+            const fallbackTab = tabsData[0];
+            const fallbackUrl = getTabUrl(fallbackTab);
+            if (fallbackUrl) {
+                showLoading();
+                bindIframeLoadEvent();
+                iframe.src = fallbackUrl;
+                currentUrl = fallbackUrl;
+            }
         }
     }
 
-    // 預先加載失敗或超時保護: 如果 iframe 超過 8 秒仍未觸發 load，隱藏 loading 避免轉圈圈卡死
+    // 預先加載失敗或超時保護: 如果 iframe 超過 10 秒仍未觸發 load，隱藏 loading 避免轉圈圈卡死
     let loadingTimeout = null;
     function setLoadingFallback() {
         if (loadingTimeout) clearTimeout(loadingTimeout);
@@ -406,27 +427,21 @@
         // 設置默認頁籤加載
         initDefaultTab();
         // 如果已經顯示loading但沒有觸發load (網路慢) 超時會自動關閉
-        // 另外處理窗口 resize 時沒有任何副作用，完美支持
     }
 
     // 啟動所有功能
     init();
 
-    // 可選：當頁面重新獲得焦點時，如果iframe 還未顯示完整且loading消失但內容空白？不需要強制刷新
-    // 針對有些嵌入可能會因為 Google 服務的 cookie 或登入問題，不處理也沒問題。
-    // 為了體驗，若使用者點擊頁籤時，確保 loading 顯示以及超時機制再次生效
-    // 另外再添加一個小細節: 當 iframe 內容已經完全加載後，手動確保 loading 關閉（避免殘留）
+    // 當頁面完全加載後，若iframe已經有內容但loading未關閉，強制關閉 (保險)
     window.addEventListener('load', () => {
-        // 若iframe已經有src且加載完成，強制隱藏loading
-        if (iframe && iframe.contentWindow && iframe.src) {
-            // 避免遺留，延遲極短時間判斷
-            setTimeout(() => {
-                if (loadingOverlay && loadingOverlay.style.display !== 'none') {
-                    // 如果仍然顯示但iframe可能已經加載完成, 嘗試通過檢查readyState? 簡單起見，再觸發一次隱藏
+        setTimeout(() => {
+            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+                // 檢查iframe是否已經有內容 (src不為空且不是about:blank)
+                if (iframe && iframe.src && iframe.src !== 'about:blank') {
                     hideLoading();
                 }
-            }, 500);
-        }
+            }
+        }, 800);
     });
 </script>
 </body>
