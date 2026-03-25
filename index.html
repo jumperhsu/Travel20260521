@@ -21,7 +21,7 @@
             color: #1e293b;
         }
 
-        /* 页签栏容器 */
+        /* 主頁籤欄容器 */
         .tabs-wrapper {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
@@ -46,7 +46,7 @@
             border-bottom: 1px solid transparent;
         }
 
-        /* 页签按钮样式 */
+        /* 主頁籤按鈕樣式 */
         .tab-btn {
             background: #f1f5f9;
             border: none;
@@ -76,10 +76,54 @@
             text-shadow: 0 1px 0 rgba(0,0,0,0.05);
         }
 
-        /* 针对长标题保持可读性 */
-        .tab-btn:focus-visible {
-            outline: 2px solid #2c3e66;
-            outline-offset: 2px;
+        /* 子頁籤區域 (參考資料專用) */
+        .sub-tabs-wrapper {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2edf2;
+            flex-shrink: 0;
+            padding: 0.5rem 1.25rem 0 1.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .sub-tabs-scroll {
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sub-tabs-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            min-width: min-content;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 子頁籤按鈕樣式 (稍小、底色不同) */
+        .sub-tab-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 2rem;
+            color: #2c3e66;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.02);
+        }
+
+        .sub-tab-btn:hover {
+            background: #e0e7ff;
+            transform: translateY(-1px);
+        }
+
+        .sub-tab-btn.active {
+            background: #2c3e66;
+            color: white;
+            box-shadow: 0 2px 6px rgba(44, 62, 102, 0.2);
         }
 
         /* iframe 容器区域 */
@@ -93,7 +137,6 @@
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
         }
 
-        /* 嵌入的表格 */
         .sheet-iframe {
             width: 100%;
             height: 100%;
@@ -102,7 +145,7 @@
             background: #fff;
         }
 
-        /* 加载指示器 (轻量优雅) */
+        /* 加载指示器 */
         .loading-overlay {
             position: absolute;
             top: 0;
@@ -145,7 +188,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 响应式调整: 移动端更紧凑的页签 */
+        /* 响应式 */
         @media (max-width: 680px) {
             .tabs-wrapper {
                 padding: 0.5rem 1rem 0 1rem;
@@ -154,13 +197,19 @@
                 padding: 0.45rem 1rem;
                 font-size: 0.8rem;
             }
+            .sub-tabs-wrapper {
+                padding: 0.4rem 1rem 0 1rem;
+            }
+            .sub-tab-btn {
+                padding: 0.35rem 0.85rem;
+                font-size: 0.75rem;
+            }
             .loading-spinner {
                 padding: 0.7rem 1.4rem;
                 font-size: 0.85rem;
             }
         }
 
-        /* 优雅的滚动条 */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -176,18 +225,20 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-
-        /* 页签区域滚动时保持美观 */
-        .tabs-scroll::-webkit-scrollbar {
-            height: 4px;
-        }
     </style>
 </head>
 <body>
 
 <div class="tabs-wrapper">
     <div class="tabs-scroll">
-        <div class="tabs-list" id="tabsContainer" role="tablist" aria-label="資料頁籤"></div>
+        <div class="tabs-list" id="tabsContainer" role="tablist" aria-label="主頁籤"></div>
+    </div>
+</div>
+
+<!-- 子頁籤容器 (預設隱藏，僅在點擊「參考資料」時顯示) -->
+<div class="sub-tabs-wrapper" id="subTabsWrapper" style="display: none;">
+    <div class="sub-tabs-scroll">
+        <div class="sub-tabs-list" id="subTabsContainer" role="tablist" aria-label="參考資料子頁籤"></div>
     </div>
 </div>
 
@@ -202,247 +253,282 @@
 </div>
 
 <script>
-    // ----- 頁籤數據 -----
-    // 原有 Google Sheets 頁籤 (使用 gid)
-    // 新增兩個外部網址頁籤: 行程計劃、費用紀錄
+    // ----- 頁籤數據結構 -----
+    // 普通頁籤 (直接加載內容)
+    // 參考資料頁籤為父級，內含子頁籤
     const tabsData = [
-        { title: "行程表", gid: "1164452748" },
-        { title: "住宿資訊", gid: "387601380" },
-        { title: "機票資訊", gid: "1361755418" },
-        { title: "費用估算", gid: "28583731" },
-        { title: "洗浴中心", gid: "1771845056" },
-        { title: "上海住宿", gid: "1597957517" },
-        { title: "瀋陽住宿", gid: "1910484059" },
-        { title: "哈爾濱住宿", gid: "461233085" },
-        { title: "寧波中轉", gid: "329265611" },
-        // 新增外部網頁頁籤 (完整URL)
-        { title: "行程計劃", externalUrl: "https://jumperhsu.github.io/TravelPlans/ViewPlan.html?versionId=92df65f1-16a4-42b9-9215-227c147e90de" },
-        { title: "費用紀錄", externalUrl: "https://jumperhsu.github.io/T-E/" }
+        { title: "行程表", type: "sheet", gid: "1164452748" },
+        { title: "住宿資訊", type: "sheet", gid: "387601380" },
+        { title: "機票資訊", type: "sheet", gid: "1361755418" },
+        { title: "費用估算", type: "sheet", gid: "28583731" },
+        {
+            title: "參考資料",
+            type: "parent",
+            children: [
+                { title: "洗浴中心", gid: "1771845056" },
+                { title: "上海住宿", gid: "1597957517" },
+                { title: "瀋陽住宿", gid: "1910484059" },
+                { title: "哈爾濱住宿", gid: "461233085" },
+                { title: "寧波中轉", gid: "329265611" }
+            ]
+        },
+        { title: "行程計劃", type: "external", url: "https://jumperhsu.github.io/TravelPlans/ViewPlan.html?versionId=92df65f1-16a4-42b9-9215-227c147e90de" },
+        { title: "費用紀錄", type: "external", url: "https://jumperhsu.github.io/T-E/" }
     ];
 
-    // Google Sheets 發布的基礎 URL (不包含 gid)
+    // Google Sheets 基礎 URL
     const BASE_URL = "https://docs.google.com/spreadsheets/u/0/d/e/2PACX-1vQf4lKe2Af05LXYVNJSi46BnsllCOGCS4wUU1-lXXlDQqJm9XwlqvZPAC4pMKsfBC93U8nB6F6QlVCJ/pubhtml/sheet?headers=false&gid=";
 
     // DOM 元素
     const tabsContainer = document.getElementById('tabsContainer');
+    const subTabsWrapper = document.getElementById('subTabsWrapper');
+    const subTabsContainer = document.getElementById('subTabsContainer');
     const iframe = document.getElementById('sheetIframe');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    let currentActiveTab = null;         // 當前激活的按鈕元素
-    let currentUrl = null;               // 當前加載的完整URL (用於避免重複加載)
-    let iframeLoadHandler = null;         // 用來管理 load 事件
+    let currentActiveTabBtn = null;       // 當前激活的主頁籤按鈕
+    let currentUrl = null;                // 當前 iframe 加載的完整 URL
+    let iframeLoadHandler = null;
+    let loadingTimeout = null;
 
-    // 顯示 loading (確保淡入效果)
+    // 子頁籤相關狀態
+    let currentParentTab = null;           // 當前打開的父頁籤對象 (參考資料)
+    let currentSubTabIndex = 0;            // 當前選中的子頁籤索引
+    let subTabButtons = [];                // 子頁籤按鈕 DOM 列表
+
+    // 顯示/隱藏 loading
     function showLoading() {
         if (loadingOverlay) {
             loadingOverlay.style.opacity = '1';
             loadingOverlay.style.visibility = 'visible';
             loadingOverlay.style.display = 'flex';
         }
+        // 超時保護
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        loadingTimeout = setTimeout(() => {
+            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+                hideLoading();
+                console.warn('載入逾時，請檢查網路');
+            }
+        }, 10000);
     }
 
-    // 隱藏 loading (加載完成後)
     function hideLoading() {
         if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
-            // 等待動畫結束後徹底隱藏，但仍佔位避免閃爍，設為不可見即可
             setTimeout(() => {
                 if (loadingOverlay.style.opacity === '0') {
                     loadingOverlay.style.display = 'none';
                 }
             }, 200);
         }
+        if (loadingTimeout) clearTimeout(loadingTimeout);
     }
 
-    // 重置 iframe load 監聽，每次切換時綁定新的完成事件
+    // iframe load 事件綁定
     function bindIframeLoadEvent() {
         if (iframeLoadHandler) {
             iframe.removeEventListener('load', iframeLoadHandler);
         }
         iframeLoadHandler = function() {
-            // iframe 內容加載完成，隱藏 loading
             hideLoading();
         };
         iframe.addEventListener('load', iframeLoadHandler);
-        // 也監聽錯誤事件 (例如網路中斷或無法載入)
         iframe.addEventListener('error', function onError() {
             hideLoading();
-            console.warn('iframe 載入失敗，請檢查網路或連結有效性');
+            console.warn('iframe 載入失敗');
         });
     }
 
-    // 獲取頁籤對應的完整URL
+    // 加載指定 URL 到 iframe
+    function loadUrl(url) {
+        if (currentUrl === url && iframe.src === url) return;
+        showLoading();
+        bindIframeLoadEvent();
+        iframe.src = url;
+        currentUrl = url;
+    }
+
+    // 獲取頁籤對應的 URL (普通 sheet 或外部)
     function getTabUrl(tab) {
-        if (tab.externalUrl) {
-            return tab.externalUrl;
-        } else if (tab.gid) {
+        if (tab.type === "sheet" && tab.gid) {
             return BASE_URL + tab.gid;
+        } else if (tab.type === "external" && tab.url) {
+            return tab.url;
         }
         return null;
     }
 
-    // 切換頁籤核心: 更新 iframe src 並管理高亮
-    function switchToTab(tab, tabButton) {
-        const targetUrl = getTabUrl(tab);
-        if (!targetUrl) return;
-
-        // 若點擊的已經是當前頁籤且 iframe 的 src 相同，則不做任何操作 (避免重複加載)
-        if (currentUrl === targetUrl && iframe.src === targetUrl) {
-            // 但仍然確保高亮是對的 (被點擊時)
-            if (currentActiveTab !== tabButton) {
-                updateActiveTabStyle(tabButton);
-            }
-            return;
-        }
-
-        // 顯示 loading (新內容載入)
-        showLoading();
-        // 確保 iframe load 事件綁定 (重新綁定避免舊事件影響)
-        bindIframeLoadEvent();
-
-        // 更新 src
-        iframe.src = targetUrl;
-        // 記錄當前 URL
-        currentUrl = targetUrl;
-
-        // 更新頁籤樣式
-        updateActiveTabStyle(tabButton);
+    // 加載子頁籤內容 (根據子頁籤物件)
+    function loadSubTabContent(subTab) {
+        if (!subTab || !subTab.gid) return;
+        const url = BASE_URL + subTab.gid;
+        loadUrl(url);
     }
 
-    // 更新頁籤 active 樣式
-    function updateActiveTabStyle(activeButton) {
-        if (currentActiveTab) {
-            currentActiveTab.classList.remove('active');
-            currentActiveTab.setAttribute('aria-selected', 'false');
+    // 更新主頁籤 active 樣式
+    function updateMainTabActive(activeButton) {
+        if (currentActiveTabBtn) {
+            currentActiveTabBtn.classList.remove('active');
+            currentActiveTabBtn.setAttribute('aria-selected', 'false');
         }
         activeButton.classList.add('active');
         activeButton.setAttribute('aria-selected', 'true');
-        currentActiveTab = activeButton;
+        currentActiveTabBtn = activeButton;
     }
 
-    // 動態生成頁籤按鈕 (維護方便，易於擴充)
-    function buildTabs() {
-        tabsContainer.innerHTML = ''; // 清空容器
+    // 渲染子頁籤按鈕 (根據 parentTab)
+    function renderSubTabs(parentTab) {
+        subTabsContainer.innerHTML = '';
+        if (!parentTab || !parentTab.children) return;
 
+        const children = parentTab.children;
+        subTabButtons = [];
+        children.forEach((child, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'sub-tab-btn';
+            btn.textContent = child.title;
+            btn.setAttribute('data-sub-index', idx);
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 更新子頁籤高亮
+                setActiveSubTab(idx);
+                // 加載內容
+                loadSubTabContent(child);
+                currentSubTabIndex = idx;
+            });
+            subTabsContainer.appendChild(btn);
+            subTabButtons.push(btn);
+        });
+
+        // 設置默認高亮
+        if (children.length > 0) {
+            setActiveSubTab(currentSubTabIndex);
+            // 加載當前選中的子頁籤內容
+            const defaultChild = children[currentSubTabIndex];
+            if (defaultChild) {
+                loadSubTabContent(defaultChild);
+            }
+        }
+    }
+
+    // 設置子頁籤高亮
+    function setActiveSubTab(index) {
+        subTabButtons.forEach((btn, i) => {
+            if (i === index) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+            } else {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            }
+        });
+    }
+
+    // 顯示子頁籤區域
+    function showSubTabs(parentTab) {
+        currentParentTab = parentTab;
+        renderSubTabs(parentTab);
+        subTabsWrapper.style.display = 'block';
+    }
+
+    // 隱藏子頁籤區域
+    function hideSubTabs() {
+        subTabsWrapper.style.display = 'none';
+        currentParentTab = null;
+    }
+
+    // 切換主頁籤
+    function switchToMainTab(tab, button) {
+        // 處理父級頁籤 (參考資料)
+        if (tab.type === 'parent') {
+            // 顯示子頁籤並加載對應內容
+            if (currentParentTab !== tab) {
+                // 切換到不同的父頁籤（目前只有參考資料，但保留通用性）
+                // 重置子頁籤索引為0
+                currentSubTabIndex = 0;
+                showSubTabs(tab);
+            } else {
+                // 相同父頁籤，但可能子頁籤區域已顯示，只需確保內容不重複加載
+                // 但若子頁籤區域已顯示且已有內容，則無需操作，但仍要更新高亮
+                if (subTabsWrapper.style.display !== 'block') {
+                    showSubTabs(tab);
+                }
+            }
+            updateMainTabActive(button);
+            return;
+        }
+
+        // 普通頁籤 (sheet 或 external)
+        // 切換時隱藏子頁籤區域
+        hideSubTabs();
+
+        const url = getTabUrl(tab);
+        if (url) {
+            loadUrl(url);
+        }
+        updateMainTabActive(button);
+    }
+
+    // 生成主頁籤按鈕
+    function buildMainTabs() {
+        tabsContainer.innerHTML = '';
         tabsData.forEach((tab, index) => {
             const button = document.createElement('button');
             button.className = 'tab-btn';
             button.textContent = tab.title;
-            // 儲存完整的 tab 物件資料 (使用 data-* 存索引，實際切換時透過索引取用)
             button.setAttribute('data-tab-index', index);
             button.setAttribute('role', 'tab');
             button.setAttribute('aria-selected', 'false');
-            button.setAttribute('id', `tab-${index}`);
-            
-            // 點擊事件
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                const idx = parseInt(button.getAttribute('data-tab-index'), 10);
-                const targetTab = tabsData[idx];
-                if (targetTab) {
-                    switchToTab(targetTab, button);
-                }
+                const targetTab = tabsData[index];
+                switchToMainTab(targetTab, button);
             });
-
             tabsContainer.appendChild(button);
         });
     }
 
-    // 初始化: 設定默認頁籤 (行程表，索引0)
-    function initDefaultTab() {
+    // 初始化默認頁籤 (行程表)
+    function initDefault() {
         if (tabsData.length === 0) return;
-        const firstTab = tabsData[0];
-        const firstButton = tabsContainer.querySelector('.tab-btn');
-        if (firstButton && firstTab) {
-            const defaultUrl = getTabUrl(firstTab);
-            if (defaultUrl) {
-                showLoading();
-                bindIframeLoadEvent();
-                iframe.src = defaultUrl;
-                currentUrl = defaultUrl;
-                // 高亮第一個按鈕
-                firstButton.classList.add('active');
-                firstButton.setAttribute('aria-selected', 'true');
-                currentActiveTab = firstButton;
-            }
-        } else {
-            // 預防萬一: 直接加載第一個頁籤
-            const fallbackTab = tabsData[0];
-            const fallbackUrl = getTabUrl(fallbackTab);
-            if (fallbackUrl) {
-                showLoading();
-                bindIframeLoadEvent();
-                iframe.src = fallbackUrl;
-                currentUrl = fallbackUrl;
+        // 尋找第一個非 parent 的頁籤作為默認（行程表）
+        let defaultIndex = 0;
+        for (let i = 0; i < tabsData.length; i++) {
+            if (tabsData[i].type !== 'parent') {
+                defaultIndex = i;
+                break;
             }
         }
-    }
-
-    // 預先加載失敗或超時保護: 如果 iframe 超過 10 秒仍未觸發 load，隱藏 loading 避免轉圈圈卡死
-    let loadingTimeout = null;
-    function setLoadingFallback() {
-        if (loadingTimeout) clearTimeout(loadingTimeout);
-        loadingTimeout = setTimeout(() => {
-            // 若 loading 還在顯示，代表可能載入極慢或發生錯誤，強制隱藏，避免介面凍結
-            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
-                hideLoading();
-                console.warn('載入逾時，請檢查網路或重新整理頁面');
+        const defaultTab = tabsData[defaultIndex];
+        const defaultButton = tabsContainer.children[defaultIndex];
+        if (defaultButton && defaultTab) {
+            const url = getTabUrl(defaultTab);
+            if (url) {
+                loadUrl(url);
             }
-        }, 10000); // 10秒逾時
+            updateMainTabActive(defaultButton);
+        }
+        // 確保子頁籤一開始是隱藏的
+        hideSubTabs();
     }
 
-    // 擴展原本的 bindIframeLoadEvent, 增加超時重置
-    const originalBind = bindIframeLoadEvent;
-    window.bindIframeLoadEvent = function() {
-        if (iframeLoadHandler) {
-            iframe.removeEventListener('load', iframeLoadHandler);
-        }
-        iframeLoadHandler = function() {
-            hideLoading();
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-        };
-        iframe.addEventListener('load', iframeLoadHandler);
-        iframe.addEventListener('error', function onError() {
-            hideLoading();
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-        });
-    };
-    // 覆蓋原函數，同時保留原有行為
-    bindIframeLoadEvent = window.bindIframeLoadEvent;
-
-    // 重新封裝 showLoading 時啟動計時器
-    const originalShow = showLoading;
-    window.showLoading = function() {
-        if (loadingTimeout) clearTimeout(loadingTimeout);
-        originalShow();
-        setLoadingFallback();
-    };
-    showLoading = window.showLoading;
-
-    // 整合初始化: 生成按鈕、設定預設、綁定事件強化
+    // 綁定全局事件與初始化
     function init() {
-        buildTabs();
-        // 綁定 iframe 默認事件與超時防護
+        buildMainTabs();
         bindIframeLoadEvent();
-        // 設置默認頁籤加載
-        initDefaultTab();
-        // 如果已經顯示loading但沒有觸發load (網路慢) 超時會自動關閉
-    }
-
-    // 啟動所有功能
-    init();
-
-    // 當頁面完全加載後，若iframe已經有內容但loading未關閉，強制關閉 (保險)
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            if (loadingOverlay && loadingOverlay.style.display !== 'none') {
-                // 檢查iframe是否已經有內容 (src不為空且不是about:blank)
-                if (iframe && iframe.src && iframe.src !== 'about:blank') {
+        initDefault();
+        // 如果某些意外導致 loading 未關閉，最終保險
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (loadingOverlay && loadingOverlay.style.display !== 'none') {
                     hideLoading();
                 }
-            }
-        }, 800);
-    });
+            }, 800);
+        });
+    }
+
+    init();
 </script>
 </body>
 </html>
