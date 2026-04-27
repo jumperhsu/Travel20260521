@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動態旅遊計畫表</title>
+    <style>
+        /* 基本重設 */
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; }
+        
+        #status-bar {
+            position: fixed; top: 0; width: 100%; background: #ffeb3b; 
+            color: #333; text-align: center; padding: 10px; font-weight: bold; 
+            z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: opacity 0.5s;
+        }
+
+        #content { margin-top: 40px; width: 100%; height: calc(100% - 40px); }
+    </style>
+</head>
+<body>
+    <div id="status-bar">正在從 Google Sheets 載入旅遊計畫並搜尋今日行程...</div>
+    <div id="content"></div>
+
+    <script>
+        // 你的 Google Sheets 發布網頁網址
+        const sheetUrl = "https://docs.google.com/spreadsheets/u/0/d/e/2PACX-1vQf4lKe2Af05LXYVNJSi46BnsllCOGCS4wUU1-lXXlDQqJm9XwlqvZPAC4pMKsfBC93U8nB6F6QlVCJ/pubhtml/sheet?headers=false&gid=665622770";
+        
+        // 改用更穩定的 corsproxy.io 
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(sheetUrl)}`;
+
+        fetch(proxyUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('網路回應不成功');
+                return response.text(); // corsproxy 直接回傳純 HTML 文字，不需要解析 JSON
+            })
+            .then(html => {
+                // 將抓取回來的純 HTML 轉換為網頁節點
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // 提取原始試算表的 CSS 樣式與 HTML 結構
+                const head = doc.querySelector('head').innerHTML;
+                const body = doc.querySelector('body').innerHTML;
+                
+                document.head.innerHTML += head;
+                document.getElementById('content').innerHTML = body;
+
+                // ---------------- 日期判斷與自動定位邏輯 ----------------
+
+                const today = new Date();
+                const m = today.getMonth() + 1;
+                const d = today.getDate();
+                const mm = m.toString().padStart(2, '0');
+                const dd = d.toString().padStart(2, '0');
+                const yyyy = today.getFullYear();
+
+                // 支援多種日期格式
+                const dateFormats = [
+                    `${m}/${d}`, `${mm}/${dd}`, `${m}月${d}日`, 
+                    `${yyyy}/${m}/${d}`, `${yyyy}/${mm}/${dd}`, `${m}.${d}`, `${mm}.${dd}`
+                ];
+                
+                let found = false;
+                const cells = document.querySelectorAll('#content td');
+                
+                for (let cell of cells) {
+                    let text = cell.innerText.trim();
+                    let cleanText = text.replace(/\s*\(.*?\)\s*/g, '').replace(/\s*（.*?）\s*/g, '').trim();
+
+                    if (dateFormats.includes(cleanText) || dateFormats.includes(text)) {
+                        // 平滑滾動到畫面正中央
+                        cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // 標記醒目的顏色
+                        cell.style.backgroundColor = '#ffeb3b';
+                        cell.style.border = '2px solid #e91e63';
+                        cell.style.fontWeight = 'bold';
+                        
+                        document.getElementById('status-bar').innerText = `目前系統日期：${m}月${d}日，已自動定位到今日行程！`;
+                        setTimeout(() => { document.getElementById('status-bar').style.opacity = '0'; }, 3000);
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    document.getElementById('status-bar').innerText = `目前系統日期（${m}月${d}日）不在旅遊期間內。`;
+                    setTimeout(() => { document.getElementById('status-bar').style.opacity = '0'; }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                document.getElementById('status-bar').innerText = "無法載入計畫表，可能是公司網路防火牆阻擋了代理伺服器。";
+                document.getElementById('status-bar').style.backgroundColor = "#ff9800";
+            });
+    </script>
+</body>
+</html>
