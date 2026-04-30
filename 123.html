@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅遊行程轉換器</title>
+    <title>旅遊行程轉換器（含代理備援）</title>
     <style>
         :root {
             --primary: #2c3e50;
@@ -56,6 +56,8 @@
         .btn-load:hover { background: #e67e22; transform: translateY(-1px); }
         .btn-refresh { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
         .btn-refresh:hover { background: rgba(255,255,255,0.25); }
+        .proxy-settings { margin-top: 10px; font-size: 0.85em; color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 6px; }
+        .proxy-settings input { padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; width: 250px; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .date-info-bar {
             background: var(--card-bg); border-radius: 12px; padding: 16px 24px; margin-bottom: 20px;
@@ -167,10 +169,18 @@
 <div class="header">
     <div class="header-inner">
         <h1>🗺️ 旅遊<span>行程</span></h1>
-        <div class="url-input-group">
-            <input type="text" id="sheetUrl" placeholder="貼上已發佈的試算表網址（pubhtml 結尾）">
-            <button class="btn btn-load" onclick="loadFromURL()">📥 載入行程</button>
-            <button class="btn btn-refresh" onclick="resetPage()">🔄</button>
+        <div>
+            <div class="url-input-group">
+                <input type="text" id="sheetUrl" placeholder="貼上已發佈的試算表網址（pubhtml 結尾）">
+                <button class="btn btn-load" onclick="loadFromURL()">📥 載入行程</button>
+                <button class="btn btn-refresh" onclick="resetPage()">🔄</button>
+            </div>
+            <div class="proxy-settings">
+                <span>⚙️ CORS 代理 (選填)：</span>
+                <input type="text" id="proxyUrl" placeholder="https://corsproxy.io/?" value="">
+                <button class="btn" style="padding:4px 12px; font-size:0.8em; background:rgba(255,255,255,0.2);" onclick="saveProxy()">儲存代理</button>
+                <span style="font-size:0.75em;">若 JSONP 失敗將自動使用</span>
+            </div>
         </div>
     </div>
 </div>
@@ -178,7 +188,10 @@
     <div class="loading-bar">
         <div style="font-size:3em;margin-bottom:12px;">📋</div>
         <h3>請貼上 Google 試算表網址，點擊載入行程</h3>
-        <p style="color:#95a5a6;margin-top:8px;">需使用已「發佈到網路」的試算表（pubhtml 結尾）</p>
+        <p style="color:#95a5a6;margin-top:8px;">
+            需使用已「發佈到網路」的試算表（pubhtml 結尾）<br>
+            ✅ 自動偵測網路環境，若 JSONP 無法連線，將透過 CORS 代理獲取
+        </p>
     </div>
 </div>
 <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
@@ -188,28 +201,63 @@ let tripData = null;
 let currentTripStart = null;
 let currentTripEnd = null;
 
+// ---------- 代理設定 ----------
+function getProxy() {
+    return localStorage.getItem('trip_proxy') || '';
+}
+function saveProxy() {
+    const proxy = document.getElementById('proxyUrl').value.trim();
+    if (proxy) {
+        localStorage.setItem('trip_proxy', proxy);
+        alert('代理已儲存：' + proxy);
+    } else {
+        localStorage.removeItem('trip_proxy');
+        alert('已清除代理設定');
+    }
+}
+// 頁面載入時顯示已儲存的代理
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = getProxy();
+    if (saved) document.getElementById('proxyUrl').value = saved;
+});
+
 async function loadFromURL() {
     const url = document.getElementById('sheetUrl').value.trim();
     if (!url) { alert('請輸入 Google 試算表網址'); return; }
 
     const display = document.getElementById('mainContainer');
-    display.innerHTML = '<div class="loading-bar"><div class="spinner"></div><p>正在透過 JSONP 讀取行程資料...</p></div>';
+    display.innerHTML = '<div class="loading-bar"><div class="spinner"></div><p>正在嘗試 JSONP 讀取…</p></div>';
 
     try {
-        const rows = await fetchSheetData(url);
+        const rows = await fetchSheetDataWithFallback(url);
         if (!rows || rows.length === 0) throw new Error('試算表內容為空');
         tripData = parseTripData(rows);
         if (!tripData.days || tripData.days.length === 0) throw new Error('找不到行程天數，請確認表格結構。');
         renderTrip(tripData);
     } catch (error) {
         display.innerHTML = `<div class="error-msg">❌ 載入失敗：${error.message}<br>
-        <small>請確認網址為「已發佈的網頁」格式（結尾為 <code>/pubhtml/sheet?gid=...</code>）。</small></div>`;
+        <small>👉 請確認試算表已「發佈到網路」且共用權限設為「任何知道連結的人都可以檢視」。<br>
+        👉 若在中國大陸，請在上方輸入 CORS 代理網址（例如 <code>https://corsproxy.io/?</code>）後再試。</small></div>`;
         console.error(error);
     }
 }
 
-// ---------- 使用 JSONP 讀取資料 ----------
-function fetchSheetData(url) {
+// ---------- 雙重備援資料獲取 ----------
+async function fetchSheetDataWithFallback(url) {
+    // 1️⃣ 嘗試 JSONP (速度快，無需代理)
+    try {
+        return await fetchSheetDataJSONP(url);
+    } catch (e) {
+        console.warn('JSONP 失敗，嘗試啟用 CORS 代理取得 CSV…', e.message);
+    }
+
+    // 2️⃣ 嘗試透過 CORS 代理獲取 CSV
+    const proxy = getProxy();
+    if (!proxy) {
+        throw new Error('JSONP 無法連線，且未設定 CORS 代理。請在上方輸入代理網址（例如 https://corsproxy.io/?）');
+    }
+
+    // 建立 CSV 匯出網址
     let key, gid;
     const pubMatch = url.match(/\/d\/e\/([^/]+)\//);
     if (pubMatch) key = pubMatch[1];
@@ -219,13 +267,29 @@ function fetchSheetData(url) {
     }
     const gidMatch = url.match(/gid=(\d+)/);
     gid = gidMatch ? gidMatch[1] : '0';
+    const csvURL = `https://docs.google.com/spreadsheets/d/e/${key}/pub?output=csv&gid=${gid}`;
+    
+    const proxyURL = proxy.replace(/\/?$/, '/') + csvURL; // 確保組合正確
+    const response = await fetch(proxyURL);
+    if (!response.ok) throw new Error(`代理請求失敗 (HTTP ${response.status})`);
+    const csvText = await response.text();
+    return parseCSV(csvText);
+}
+
+// JSONP 實作
+function fetchSheetDataJSONP(url) {
+    let key, gid;
+    const pubMatch = url.match(/\/d\/e\/([^/]+)\//);
+    if (pubMatch) key = pubMatch[1];
+    if (!key) throw new Error('無法解析試算表 ID');
+    const gidMatch = url.match(/gid=(\d+)/);
+    gid = gidMatch ? gidMatch[1] : '0';
 
     return new Promise((resolve, reject) => {
         const callbackName = 'tripCallback_' + Date.now();
         window[callbackName] = function(response) {
             delete window[callbackName];
             if (script.parentNode) script.parentNode.removeChild(script);
-
             if (response.table && response.table.rows) {
                 const result = [];
                 for (const row of response.table.rows) {
@@ -240,25 +304,47 @@ function fetchSheetData(url) {
                 reject(new Error('Google 回傳的資料格式不正確'));
             }
         };
-
         const script = document.createElement('script');
         script.src = `https://docs.google.com/spreadsheets/d/e/${key}/gviz/tq?tqx=out:json&responseHandler=${callbackName}&tq=&gid=${gid}`;
         script.onerror = () => {
             delete window[callbackName];
-            reject(new Error('無法連線到 Google 試算表（請確認網址正確且試算表已發佈）'));
+            reject(new Error('JSONP 請求失敗'));
         };
         document.head.appendChild(script);
-
         setTimeout(() => {
             if (window[callbackName]) {
                 delete window[callbackName];
-                reject(new Error('載入逾時'));
+                reject(new Error('JSONP 載入逾時'));
             }
-        }, 15000);
+        }, 10000); // 縮短逾時以加速切換代理
     });
 }
 
-// ---------- 解析行程（根據您提供的表格結構）----------
+// 簡易 CSV 解析
+function parseCSV(text) {
+    const rows = [];
+    let currentRow = [];
+    let currentField = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i], next = text[i+1];
+        if (inQuotes) {
+            if (ch === '"' && next === '"') { currentField += '"'; i++; }
+            else if (ch === '"') inQuotes = false;
+            else currentField += ch;
+        } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { currentRow.push(currentField); currentField = ''; }
+            else if (ch === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; }
+            else if (ch === '\r') { /* skip */ }
+            else currentField += ch;
+        }
+    }
+    if (currentField || currentRow.length) { currentRow.push(currentField); rows.push(currentRow); }
+    return rows.filter(r => r.some(cell => cell.trim() !== ''));
+}
+
+// ---------- 行程解析（與之前相同）----------
 function parseTripData(rows) {
     let tripStart = null;
     for (let i = 0; i < Math.min(5, rows.length); i++) {
@@ -298,34 +384,22 @@ function parseTripData(rows) {
         const type = possibleTypes.includes(rawType) ? rawType : '';
         let description = '';
         for (let k = 9; k < row.length; k++) {
-            if (row[k] && row[k].trim() !== '') {
-                description += (description ? ' ' : '') + row[k].trim();
-            }
+            if (row[k] && row[k].trim() !== '') description += (description ? ' ' : '') + row[k].trim();
         }
 
-        let isNewDay = false;
-        if (dayNumField1 && /^\d+$/.test(dayNumField1)) {
-            currentDay = parseInt(dayNumField1);
-            isNewDay = true;
-        } else if (dayNumField0 && /^\d+$/.test(dayNumField0)) {
-            currentDay = parseInt(dayNumField0);
-            isNewDay = true;
-        }
-
-        if (isNewDay) {
+        if ((dayNumField1 && /^\d+$/.test(dayNumField1)) || (dayNumField0 && /^\d+$/.test(dayNumField0))) {
+            currentDay = parseInt(dayNumField1 || dayNumField0);
             const dateStr = extractDateFromText(dateText, tripStart);
             scheduleItems.push({ day: currentDay, date: dateStr, dateLabel: dateText, items: [] });
-        } else {
-            if (scheduleItems.length > 0) {
-                scheduleItems[scheduleItems.length - 1].items.push({
-                    time: timeRange,
-                    destination: destination,
-                    gaodeLink: generateMapLink(gaodeText, destination, 'gaode'),
-                    baiduLink: generateMapLink(baiduText, destination, 'baidu'),
-                    type: type,
-                    description: description
-                });
-            }
+        } else if (scheduleItems.length > 0) {
+            scheduleItems[scheduleItems.length - 1].items.push({
+                time: timeRange,
+                destination: destination,
+                gaodeLink: generateMapLink(gaodeText, destination, 'gaode'),
+                baiduLink: generateMapLink(baiduText, destination, 'baidu'),
+                type: type,
+                description: description
+            });
         }
     }
 
@@ -370,7 +444,7 @@ function stripHtml(html) {
     return div.textContent || '';
 }
 
-// ========== 畫面渲染 ==========
+// ---------- 畫面渲染（同前）----------
 function renderTrip(data) {
     const container = document.getElementById('mainContainer');
     const today = new Date(); today.setHours(0,0,0,0);
@@ -392,7 +466,7 @@ function renderTrip(data) {
 
     html += '<div class="filter-bar">';
     html += '<input type="text" id="searchInput" placeholder="🔍 搜尋目的地、說明..." oninput="filterSchedule()">';
-    html += '<div class="filter-chips" id="filterChips">';
+    html += '<div class="filter-chips">';
     html += '<span class="filter-chip active" data-type="all" onclick="setTypeFilter(\'all\', this)">全部</span>';
     allTypes.forEach(t => { html += `<span class="filter-chip" data-type="${t}" onclick="setTypeFilter('${t}', this)">${t}</span>`; });
     html += '</div></div><div id="scheduleList">';
@@ -412,9 +486,7 @@ function renderTrip(data) {
             html += '<div class="time-col">';
             if (item.time) html += `<span class="time-range">${item.time}</span>`;
             html += '</div><div class="content-col">';
-            if (item.destination) {
-                html += `<div class="destination">${escapeHtml(item.destination)}</div>`;
-            }
+            if (item.destination) html += `<div class="destination">${escapeHtml(item.destination)}</div>`;
             if (item.type) {
                 const cls = item.type.replace(/[^\u4e00-\u9fa5\w]/g, '') || 'default';
                 html += `<span class="type-tag type-${cls}">${item.type}</span>`;
@@ -425,9 +497,7 @@ function renderTrip(data) {
                 if (item.baiduLink) html += `<a href="${item.baiduLink}" target="_blank" class="map-link">📍 百度地圖</a>`;
                 html += '</div>';
             }
-            if (item.description) {
-                html += `<div class="description">${escapeHtml(item.description)}</div>`;
-            }
+            if (item.description) html += `<div class="description">${escapeHtml(item.description)}</div>`;
             html += '</div></div>';
         });
         html += '</div></div>';
@@ -446,9 +516,7 @@ function renderTrip(data) {
 }
 
 function getDayNumberForDate(date, data) {
-    for (const d of data.days) {
-        if (d.date && new Date(d.date).getTime() === date.getTime()) return d.day;
-    }
+    for (const d of data.days) if (d.date && new Date(d.date).getTime() === date.getTime()) return d.day;
     return -1;
 }
 function scrollToDay(dayNum) {
@@ -509,7 +577,6 @@ function resetPage() {
         <p style="color:#95a5a6;">需使用已「發佈到網路」的試算表（pubhtml 結尾）</p></div>`;
 }
 
-// 返回頂部按鈕
 window.addEventListener('scroll', () => {
     document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
 });
