@@ -26,27 +26,31 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', '微軟正黑體', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            font-family: 'Segoe UI', '微軟正黑體', 'Microsoft JhengHei', sans-serif;
             background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
         }
         .header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: white; padding: 16px 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+            color: white; padding: 16px 24px; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.15);
         }
         .header-inner {
-            max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+            max-width: 1200px; margin: 0 auto; display: flex; align-items: center;
+            justify-content: space-between; flex-wrap: wrap; gap: 12px;
         }
         .header h1 { font-size: 1.5em; font-weight: 700; }
         .header h1 span { color: #f39c12; }
-        .url-input-group { display: flex; gap: 8px; align-items: center; flex: 1; max-width: 500px; min-width: 280px; }
+        .url-input-group { display: flex; gap: 8px; align-items: center; flex: 1; max-width: 600px; min-width: 280px; }
         .url-input-group input {
-            flex: 1; padding: 10px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.9em;
-            background: rgba(255,255,255,0.1); color: white; outline: none; transition: all 0.3s; min-width: 200px;
+            flex: 1; padding: 10px 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px;
+            font-size: 0.9em; background: rgba(255,255,255,0.1); color: white; outline: none;
+            transition: all 0.3s; min-width: 200px;
         }
         .url-input-group input::placeholder { color: rgba(255,255,255,0.5); }
         .url-input-group input:focus { border-color: #f39c12; background: rgba(255,255,255,0.15); }
         .btn {
-            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; font-weight: 600; transition: all 0.3s; white-space: nowrap;
+            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em;
+            font-weight: 600; transition: all 0.3s; white-space: nowrap;
         }
         .btn-load { background: #f39c12; color: #1a1a2e; }
         .btn-load:hover { background: #e67e22; transform: translateY(-1px); }
@@ -54,57 +58,75 @@
         .btn-refresh:hover { background: rgba(255,255,255,0.25); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .date-info-bar {
-            background: var(--card-bg); border-radius: 12px; padding: 16px 24px; margin-bottom: 20px; box-shadow: var(--shadow);
-            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+            background: var(--card-bg); border-radius: 12px; padding: 16px 24px; margin-bottom: 20px;
+            box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 12px;
         }
         .date-info-bar .trip-title { font-size: 1.2em; font-weight: 700; color: var(--primary); }
         .date-info-bar .trip-date { font-size: 0.95em; color: var(--text-light); }
-        .date-info-bar .today-badge { background: #f39c12; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
+        .date-info-bar .today-badge {
+            background: #f39c12; color: white; padding: 6px 14px; border-radius: 20px;
+            font-size: 0.85em; font-weight: 600;
+        }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
         .filter-bar input {
-            padding: 10px 16px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9em; outline: none; transition: border-color 0.3s; flex: 1; min-width: 200px;
+            padding: 10px 16px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9em;
+            outline: none; transition: border-color 0.3s; flex: 1; min-width: 200px;
         }
         .filter-bar input:focus { border-color: var(--secondary); }
         .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
         .filter-chip {
-            padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.85em; font-weight: 500; transition: all 0.3s; background: var(--card-bg);
+            padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; cursor: pointer;
+            font-size: 0.85em; font-weight: 500; transition: all 0.3s; background: var(--card-bg);
         }
-        .filter-chip:hover, .filter-chip.active { border-color: var(--secondary); background: #eaf2fb; color: var(--secondary); }
+        .filter-chip:hover, .filter-chip.active {
+            border-color: var(--secondary); background: #eaf2fb; color: var(--secondary);
+        }
         .day-section { margin-bottom: 24px; scroll-margin-top: 100px; }
         .day-header {
-            background: var(--primary); color: white; padding: 14px 20px; border-radius: 10px 10px 0 0; display: flex; align-items: center;
-            justify-content: space-between; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: background 0.3s;
+            background: var(--primary); color: white; padding: 14px 20px; border-radius: 10px 10px 0 0;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+            cursor: pointer; transition: background 0.3s;
         }
         .day-header:hover { background: #34495e; }
-        .day-header.today { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 4px 15px rgba(243,156,18,0.3); }
+        .day-header.today {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 15px rgba(243,156,18,0.3);
+        }
         .day-header .day-number { font-size: 1.1em; font-weight: 700; }
         .day-header .day-date { font-size: 0.95em; opacity: 0.9; }
         .day-header .day-arrow { transition: transform 0.3s; font-size: 1.2em; }
         .day-header.collapsed .day-arrow { transform: rotate(-90deg); }
-        .day-items { background: var(--card-bg); border-radius: 0 0 10px 10px; box-shadow: var(--shadow); overflow: hidden; transition: max-height 0.4s ease; }
+        .day-items {
+            background: var(--card-bg); border-radius: 0 0 10px 10px; box-shadow: var(--shadow);
+            overflow: hidden; transition: max-height 0.4s ease;
+        }
         .day-header.collapsed + .day-items { max-height: 0 !important; }
         .schedule-card {
-            display: flex; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: all 0.3s; gap: 16px; align-items: flex-start;
+            display: flex; padding: 16px 20px; border-bottom: 1px solid var(--border);
+            transition: all 0.3s; gap: 16px; align-items: flex-start;
         }
         .schedule-card:last-child { border-bottom: none; }
         .schedule-card:hover { background: #f8f9fb; }
-        .schedule-card.today-card { background: var(--today-highlight); border-left: 4px solid var(--today-border); }
+        .schedule-card.today-card {
+            background: var(--today-highlight); border-left: 4px solid var(--today-border);
+        }
         .time-col { min-width: 100px; font-weight: 700; color: var(--secondary); font-size: 0.95em; }
         .content-col { flex: 1; min-width: 0; }
-        .content-col .destination { font-weight: 700; font-size: 1.05em; margin-bottom: 4px; color: var(--primary); }
-        .content-col .destination a { color: var(--primary); text-decoration: none; }
-        .content-col .destination a:hover { color: var(--secondary); text-decoration: underline; }
-        .content-col .description { color: var(--text-light); font-size: 0.9em; line-height: 1.5; }
-        .content-col .description a { color: var(--secondary); text-decoration: none; }
-        .content-col .description a:hover { text-decoration: underline; }
+        .content-col .destination {
+            font-weight: 700; font-size: 1.05em; margin-bottom: 4px; color: var(--primary);
+        }
+        .content-col .description { color: var(--text-light); font-size: 0.9em; line-height: 1.5; margin-top: 4px; }
         .map-links { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
         .map-link {
-            display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f0f3f7; border-radius: 6px;
-            font-size: 0.8em; color: var(--text-light); text-decoration: none; transition: all 0.2s; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+            background: #f0f3f7; border-radius: 6px; font-size: 0.8em; color: var(--text-light);
+            text-decoration: none; transition: all 0.2s; font-weight: 500;
         }
         .map-link:hover { background: #e0e5ec; color: var(--primary); }
         .type-tag {
-            display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78em; font-weight: 600; color: white; margin-right: 6px;
+            display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78em;
+            font-weight: 600; color: white; margin-right: 6px;
         }
         .type-交通 { background: var(--tag-transport); }
         .type-就餐 { background: var(--tag-meal); }
@@ -118,14 +140,16 @@
         .icon-col { font-size: 1.4em; min-width: 30px; text-align: center; }
         .loading-bar { text-align: center; padding: 60px 20px; color: var(--text-light); }
         .loading-bar .spinner {
-            display: inline-block; width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--secondary);
-            border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;
+            display: inline-block; width: 40px; height: 40px; border: 4px solid var(--border);
+            border-top-color: var(--secondary); border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .error-msg { text-align: center; padding: 40px 20px; color: var(--accent); font-weight: 600; }
         .back-to-top {
-            position: fixed; bottom: 30px; right: 30px; width: 44px; height: 44px; background: var(--secondary); color: white;
-            border: none; border-radius: 50%; font-size: 1.3em; cursor: pointer; box-shadow: 0 4px 12px rgba(52,152,219,0.4);
+            position: fixed; bottom: 30px; right: 30px; width: 44px; height: 44px;
+            background: var(--secondary); color: white; border: none; border-radius: 50%;
+            font-size: 1.3em; cursor: pointer; box-shadow: 0 4px 12px rgba(52,152,219,0.4);
             transition: all 0.3s; z-index: 50; opacity: 0; pointer-events: none;
         }
         .back-to-top.visible { opacity: 1; pointer-events: auto; }
@@ -144,154 +168,162 @@
     <div class="header-inner">
         <h1>🗺️ 旅遊<span>行程</span></h1>
         <div class="url-input-group">
-            <input type="text" id="sheetUrl" placeholder="輸入 Google 試算表行程網址..."
-                   value="https://docs.google.com/spreadsheets/u/0/d/e/2PACX-1vQf4lKe2Af05LXYVNJSi46BnsllCOGCS4wUU1-lXXlDQqJm9XwlqvZPAC4pMKsfBC93U8nB6F6QlVCJ/pubhtml/sheet?headers=false&gid=665622770">
-            <button class="btn btn-load" onclick="loadSheet()">📥 載入行程</button>
-            <button class="btn btn-refresh" onclick="resetPage()" title="重新整理">🔄</button>
+            <input type="text" id="sheetUrl" placeholder="貼上已發佈的試算表網址（pubhtml 結尾）">
+            <button class="btn btn-load" onclick="loadFromURL()">📥 載入行程</button>
+            <button class="btn btn-refresh" onclick="resetPage()">🔄</button>
         </div>
     </div>
 </div>
 <div class="container" id="mainContainer">
     <div class="loading-bar">
         <div style="font-size:3em;margin-bottom:12px;">📋</div>
-        <h3>請輸入 Google 試算表網址來載入旅遊行程</h3>
-        <p style="color:#95a5a6;margin-top:8px;">支援已發佈為網頁的 Google Sheets 網址（pubhtml 結尾）</p>
+        <h3>請貼上 Google 試算表網址，點擊載入行程</h3>
+        <p style="color:#95a5a6;margin-top:8px;">需使用已「發佈到網路」的試算表（pubhtml 結尾）</p>
     </div>
 </div>
 <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
 <script>
-// ==================== 核心程式 ====================
 let tripData = null;
 let currentTripStart = null;
 let currentTripEnd = null;
 
-async function loadSheet() {
+async function loadFromURL() {
     const url = document.getElementById('sheetUrl').value.trim();
     if (!url) { alert('請輸入 Google 試算表網址'); return; }
 
-    const container = document.getElementById('mainContainer');
-    container.innerHTML = '<div class="loading-bar"><div class="spinner"></div><p>正在讀取行程資料...</p></div>';
+    const display = document.getElementById('mainContainer');
+    display.innerHTML = '<div class="loading-bar"><div class="spinner"></div><p>正在透過 JSONP 讀取行程資料...</p></div>';
 
     try {
-        const data = await fetchSheetDataFromCSV(url);
-        if (!data || data.length === 0) throw new Error('試算表內容為空');
-        tripData = parseTripData(data);
-        if (!tripData.days.length) throw new Error('無法解析行程，請確認表格結構包含「天數」欄位（第一欄為數字 1,2,3...）');
+        const rows = await fetchSheetData(url);
+        if (!rows || rows.length === 0) throw new Error('試算表內容為空');
+        tripData = parseTripData(rows);
+        if (!tripData.days || tripData.days.length === 0) throw new Error('找不到行程天數，請確認表格結構。');
         renderTrip(tripData);
     } catch (error) {
-        container.innerHTML = `<div class="error-msg">❌ 載入失敗：${error.message}<br>
-        <small>請確認網址為「已發佈的 Google 試算表」網址（結尾含有 <code>pubhtml</code>）。<br>
-        若不是，請先點選「檔案」→「共用」→「發佈到網路」。</small></div>`;
+        display.innerHTML = `<div class="error-msg">❌ 載入失敗：${error.message}<br>
+        <small>請確認網址為「已發佈的網頁」格式（結尾為 <code>/pubhtml/sheet?gid=...</code>）。</small></div>`;
         console.error(error);
     }
 }
 
-async function fetchSheetDataFromCSV(url) {
+// ---------- 使用 JSONP 讀取資料 ----------
+function fetchSheetData(url) {
     let key, gid;
     const pubMatch = url.match(/\/d\/e\/([^/]+)\//);
     if (pubMatch) key = pubMatch[1];
-    const editMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)\/edit/);
-    if (!key && editMatch) throw new Error('請使用「已發佈的網頁」網址，而不是編輯網址。');
-    if (!key) throw new Error('無法從網址解析試算表 ID');
-
+    if (!key) {
+        if (url.includes('/edit')) throw new Error('請使用已發佈的網址，而非編輯網址');
+        throw new Error('無法解析試算表 ID');
+    }
     const gidMatch = url.match(/gid=(\d+)/);
     gid = gidMatch ? gidMatch[1] : '0';
 
-    const csvURL = `https://docs.google.com/spreadsheets/d/e/${key}/pub?output=csv&gid=${gid}`;
-    const response = await fetch(csvURL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const csvText = await response.text();
-    return parseCSV(csvText);
+    return new Promise((resolve, reject) => {
+        const callbackName = 'tripCallback_' + Date.now();
+        window[callbackName] = function(response) {
+            delete window[callbackName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+
+            if (response.table && response.table.rows) {
+                const result = [];
+                for (const row of response.table.rows) {
+                    const rowData = [];
+                    for (const cell of row.c) {
+                        rowData.push(cell && cell.v !== null ? String(cell.v) : '');
+                    }
+                    result.push(rowData);
+                }
+                resolve(result);
+            } else {
+                reject(new Error('Google 回傳的資料格式不正確'));
+            }
+        };
+
+        const script = document.createElement('script');
+        script.src = `https://docs.google.com/spreadsheets/d/e/${key}/gviz/tq?tqx=out:json&responseHandler=${callbackName}&tq=&gid=${gid}`;
+        script.onerror = () => {
+            delete window[callbackName];
+            reject(new Error('無法連線到 Google 試算表（請確認網址正確且試算表已發佈）'));
+        };
+        document.head.appendChild(script);
+
+        setTimeout(() => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                reject(new Error('載入逾時'));
+            }
+        }, 15000);
+    });
 }
 
-function parseCSV(text) {
-    const rows = [];
-    let currentRow = [];
-    let currentField = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i], nextChar = text[i + 1];
-        if (inQuotes) {
-            if (char === '"' && nextChar === '"') { currentField += '"'; i++; }
-            else if (char === '"') inQuotes = false;
-            else currentField += char;
-        } else {
-            if (char === '"') inQuotes = true;
-            else if (char === ',') { currentRow.push(currentField); currentField = ''; }
-            else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; }
-            else if (char === '\r') { /* ignore */ }
-            else currentField += char;
-        }
-    }
-    if (currentField || currentRow.length) { currentRow.push(currentField); rows.push(currentRow); }
-    return rows.filter(row => row.some(cell => cell.trim() !== ''));
-}
-
-// ---- 核心：自動偵測行程開始位置 ----
+// ---------- 解析行程（根據您提供的表格結構）----------
 function parseTripData(rows) {
-    if (rows.length < 2) throw new Error('資料少於2行');
-
-    // 1. 尋找出發日期（可能在前面某行的第2列）
     let tripStart = null;
     for (let i = 0; i < Math.min(5, rows.length); i++) {
         const row = rows[i];
-        const cell1 = row[1] || '';
-        const date = parseDate(cell1);
-        if (date) { tripStart = date; break; }
-    }
-
-    // 2. 尋找第一天資料的起始索引（第一欄為數字，且 > 0）
-    let firstDayIdx = -1;
-    for (let i = 0; i < rows.length; i++) {
-        const val = rows[i][0] ? rows[i][0].trim() : '';
-        if (val && !isNaN(parseInt(val)) && parseInt(val) > 0) {
-            firstDayIdx = i;
-            break;
+        for (let idx of [3, 1, 0]) {
+            if (row[idx]) {
+                const d = parseDate(row[idx]);
+                if (d) { tripStart = d; break; }
+            }
         }
+        if (tripStart) break;
     }
-    if (firstDayIdx === -1) throw new Error('找不到天數標記（第一欄應為 1,2,3...）');
 
     const scheduleItems = [];
     let currentDay = 0;
-    let currentDate = '';
-    let currentDayLabel = '';
+    let firstDayIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cell1 = row[1] ? row[1].trim() : '';
+        const cell0 = row[0] ? row[0].trim() : '';
+        if (cell1 && /^\d+$/.test(cell1)) { firstDayIdx = i; break; }
+        if (cell0 && /^\d+$/.test(cell0)) { firstDayIdx = i; break; }
+    }
+    if (firstDayIdx === -1) throw new Error('找不到天數標記（第1欄或第2欄應為 1,2,3…）');
 
     for (let i = firstDayIdx; i < rows.length; i++) {
         const row = rows[i];
-        const dayNum = row[0] ? row[0].trim() : '';
-        const dateText = row[1] || '';
-        const timeRange = row[2] || '';
-        const destination = row[3] || '';
-        const gaodeLink = row[4] || '';
-        const baiduLink = row[5] || '';
-        const type = row[6] || '';
-        const description = row[7] || '';
+        const dayNumField1 = (row[1] || '').trim();
+        const dayNumField0 = (row[0] || '').trim();
+        const dateText = row[2] || '';
+        const timeRange = row[3] || '';
+        const destination = row[4] || '';
+        const gaodeText = row[5] || '';
+        const baiduText = row[6] || '';
+        const rawType = (row[8] || '').trim();
+        const possibleTypes = ['交通','就餐','住宿','景點','活動','行李','登記','早市'];
+        const type = possibleTypes.includes(rawType) ? rawType : '';
+        let description = '';
+        for (let k = 9; k < row.length; k++) {
+            if (row[k] && row[k].trim() !== '') {
+                description += (description ? ' ' : '') + row[k].trim();
+            }
+        }
 
-        if (dayNum && !isNaN(parseInt(dayNum))) {
-            // 新的一天
-            currentDay = parseInt(dayNum);
-            currentDate = extractDateFromText(dateText, tripStart);
-            currentDayLabel = dateText;
-            scheduleItems.push({
-                day: currentDay,
-                date: currentDate,
-                dateLabel: currentDayLabel,
-                items: []
-            });
+        let isNewDay = false;
+        if (dayNumField1 && /^\d+$/.test(dayNumField1)) {
+            currentDay = parseInt(dayNumField1);
+            isNewDay = true;
+        } else if (dayNumField0 && /^\d+$/.test(dayNumField0)) {
+            currentDay = parseInt(dayNumField0);
+            isNewDay = true;
+        }
+
+        if (isNewDay) {
+            const dateStr = extractDateFromText(dateText, tripStart);
+            scheduleItems.push({ day: currentDay, date: dateStr, dateLabel: dateText, items: [] });
         } else {
-            // 當日的行程項目（可能沒有時間或目的地，但仍要加入）
             if (scheduleItems.length > 0) {
-                const dayObj = scheduleItems[scheduleItems.length - 1];
-                dayObj.items.push({
+                scheduleItems[scheduleItems.length - 1].items.push({
                     time: timeRange,
                     destination: destination,
-                    gaodeLink: gaodeLink,
-                    baiduLink: baiduLink,
+                    gaodeLink: generateMapLink(gaodeText, destination, 'gaode'),
+                    baiduLink: generateMapLink(baiduText, destination, 'baidu'),
                     type: type,
-                    description: description,
-                    dateText: dateText
+                    description: description
                 });
             }
         }
@@ -302,20 +334,25 @@ function parseTripData(rows) {
         const last = scheduleItems[scheduleItems.length - 1];
         tripEnd = last.date ? new Date(last.date) : null;
     }
-
     return { tripStart, tripEnd, days: scheduleItems };
 }
 
+function generateMapLink(text, destination, mapType) {
+    if (text && (text.startsWith('http://') || text.startsWith('https://'))) return text;
+    if (!destination) return '';
+    const encoded = encodeURIComponent(destination);
+    return mapType === 'gaode' ? `https://uri.amap.com/search?keyword=${encoded}` : `https://map.baidu.com/search/${encoded}`;
+}
+
 function extractDateFromText(text, tripStart) {
-    if (!text) return '';
-    const plainText = text.replace(/<[^>]*>/g, '').trim();
-    const match = plainText.match(/(\d{1,2})\/(\d{1,2})/);
+    const plain = (text || '').replace(/<[^>]*>/g, '').trim();
+    const match = plain.match(/(\d{1,2})\/(\d{1,2})/);
     if (match) {
         const m = parseInt(match[1]), d = parseInt(match[2]);
         const y = tripStart ? tripStart.getFullYear() : new Date().getFullYear();
         return `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
     }
-    return plainText;
+    return plain;
 }
 
 function parseDate(str) {
@@ -333,12 +370,7 @@ function stripHtml(html) {
     return div.textContent || '';
 }
 
-function extractRealUrl(googleUrl) {
-    const m = googleUrl.match(/[?&]q=([^&]+)/);
-    return m ? decodeURIComponent(m[1]) : googleUrl;
-}
-
-// ---------- 畫面渲染 ----------
+// ========== 畫面渲染 ==========
 function renderTrip(data) {
     const container = document.getElementById('mainContainer');
     const today = new Date(); today.setHours(0,0,0,0);
@@ -381,10 +413,7 @@ function renderTrip(data) {
             if (item.time) html += `<span class="time-range">${item.time}</span>`;
             html += '</div><div class="content-col">';
             if (item.destination) {
-                html += '<div class="destination">';
-                if (item.destination.includes('<a')) html += item.destination;
-                else html += escapeHtml(item.destination);
-                html += '</div>';
+                html += `<div class="destination">${escapeHtml(item.destination)}</div>`;
             }
             if (item.type) {
                 const cls = item.type.replace(/[^\u4e00-\u9fa5\w]/g, '') || 'default';
@@ -392,14 +421,12 @@ function renderTrip(data) {
             }
             if (item.gaodeLink || item.baiduLink) {
                 html += '<div class="map-links">';
-                if (item.gaodeLink) html += `<a href="${extractRealUrl(item.gaodeLink)}" target="_blank" class="map-link">🗺️ 高德地圖</a>`;
-                if (item.baiduLink) html += `<a href="${extractRealUrl(item.baiduLink)}" target="_blank" class="map-link">📍 百度地圖</a>`;
+                if (item.gaodeLink) html += `<a href="${item.gaodeLink}" target="_blank" class="map-link">🗺️ 高德地圖</a>`;
+                if (item.baiduLink) html += `<a href="${item.baiduLink}" target="_blank" class="map-link">📍 百度地圖</a>`;
                 html += '</div>';
             }
             if (item.description) {
-                html += '<div class="description">';
-                html += (item.description.includes('<a')) ? item.description : escapeHtml(item.description);
-                html += '</div>';
+                html += `<div class="description">${escapeHtml(item.description)}</div>`;
             }
             html += '</div></div>';
         });
@@ -408,7 +435,6 @@ function renderTrip(data) {
     html += '</div>';
     container.innerHTML = html;
 
-    // 自動定位到今天
     if (isTodayInTrip) {
         setTimeout(() => {
             const todayDayNum = getDayNumberForDate(today, data);
@@ -461,7 +487,7 @@ function filterSchedule() {
 }
 
 function getTypeIcon(t) {
-    const map = { '交通':'🚗', '就餐':'🍽️', '住宿':'🏨', '景點':'🏛️', '活動':'🎯', '行李':'🧳', '登記':'📝', '早市':'🌅' };
+    const map = { '交通':'🚗', '就餐':'🍽️', '住宿':'🏨', '景點':'🏛️', '活動':'🎯', '行李':'🧳', '登記':'📝','早市':'🌅' };
     return map[t] || '📌';
 }
 function escapeHtml(str) {
@@ -477,28 +503,17 @@ function formatDate(d) {
 }
 function resetPage() {
     tripData = null;
-    document.getElementById('sheetUrl').value = '';
     document.getElementById('mainContainer').innerHTML = `
         <div class="loading-bar"><div style="font-size:3em;margin-bottom:12px;">📋</div>
-        <h3>請輸入 Google 試算表網址來載入旅遊行程</h3>
-        <p style="color:#95a5a6;">支援已發佈為網頁的 Google Sheets 網址（pubhtml 結尾）</p></div>`;
+        <h3>請貼上 Google 試算表網址，點擊載入行程</h3>
+        <p style="color:#95a5a6;">需使用已「發佈到網路」的試算表（pubhtml 結尾）</p></div>`;
 }
 
 // 返回頂部按鈕
 window.addEventListener('scroll', () => {
     document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 400);
 });
-document.getElementById('sheetUrl').addEventListener('keydown', e => { if (e.key==='Enter') loadSheet(); });
-
-// 自動載入 URL 參數
-window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const urlParam = params.get('url');
-    if (urlParam) {
-        document.getElementById('sheetUrl').value = urlParam;
-        loadSheet();
-    }
-});
+document.getElementById('sheetUrl').addEventListener('keydown', e => { if (e.key==='Enter') loadFromURL(); });
 </script>
 </body>
 </html>
